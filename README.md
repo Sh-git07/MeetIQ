@@ -27,7 +27,25 @@ To connect to the real backend:
 
 ## Backend
 
-*(Placeholder — to be added by backend team)*
+FastAPI backend with background research orchestration, real-time SSE streaming, ReportLab PDF generation, and PostgreSQL / Supabase with SQLite fallback.
+
+### Setup & Run
+
+```bash
+cd backend
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --port 8000
+```
+
+- API Docs (Swagger): [http://localhost:8000/docs](http://localhost:8000/docs)
+- Run Tests: `pytest tests/ -v` (inside `backend/`)
 
 ---
 
