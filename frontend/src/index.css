@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #FAF3E8;
+  --bg2: #F0E6D4;
+  --rs: #FDF8EF;
+  --ink: #1B1630;
+  --mut: #665F75;
+  --ln: rgba(27, 22, 48, 0.15);
+  --vi: #E60B09;
+  --ro: #C21A12;
+  --y: #E9D022;
+  --g: linear-gradient(90deg, hsla(52, 82%, 52%, 1) 0%, hsla(1, 92%, 47%, 1) 100%);
+  --gt: linear-gradient(90deg, #D48F00, #E60B09);
+  --lil: #F5E8A8;
+  --blu: #F4CBD3;
+  --sg: #D3E6CF;
+  --sd: #F2DDA0;
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  color-scheme: light;
+}
+
+@theme {
+  --color-cream: #FAF3E8;
+  --color-cream-deep: #F0E6D4;
+  --color-cream-raised: #FDF8EF;
+  --color-ink: #1B1630;
+  --color-muted: #665F75;
+  --color-hairline: rgba(27, 22, 48, 0.15);
+  --color-accent-red: #E60B09;
+  --color-accent-yellow: #E9D022;
+  --color-accent-deep-red: #C21A12;
+  --color-sage: #D3E6CF;
+  --color-butter: #F2DDA0;
+  --color-chip: #F5E8A8;
+  
+  --font-sans: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image: 
+    radial-gradient(55% 45% at 0% 0%, rgba(246, 205, 196, 0.5), transparent),
+    radial-gradient(45% 40% at 100% 85%, rgba(245, 229, 127, 0.35), transparent);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(44px, 7.4vw, 108px);
+}
+
+h2 {
+  font-size: clamp(34px, 5vw, 70px);
+}
+
+.font-mono-meta {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--mut);
+}
+
+/* Readable gradient text for numerals and headline accents */
+.text-gradient {
+  background: var(--gt);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Marker highlight animation */
+.marker-highlight {
+  background: linear-gradient(#F5E57F, #F5E57F) 0 90% / 0 0.4em no-repeat;
+  animation: marker-sweep 1s 0.7s forwards cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+@keyframes marker-sweep {
+  to {
+    background-size: 100% 0.4em;
+  }
+}
+
+/* Page containers & staggered fade-up */
+.page-container {
+  min-height: 100svh;
+  padding: 96px 4vw 40px;
+  max-width: 1380px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.reveal-up {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: reveal-up-anim 0.8s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-delay: calc(var(--stagger, 0) * 80ms);
+}
+
+@keyframes reveal-up-anim {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Focus styles */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--vi);
+  outline-offset: 3px;
+}
+
+/* Magnetic Button Styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 24px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  color: #1B1630;
+  background: var(--g);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 14px 30px -14px var(--vi), inset 0 -3px 0 rgba(0, 0, 0, 0.16);
+  transition: filter 0.3s, box-shadow 0.3s, transform 0.15s ease-out;
+  will-change: transform;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.12);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 24px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ln);
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.3s, filter 0.3s, transform 0.15s ease-out;
+}
+
+.btn-ghost:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.btn-primary[disabled],
+.btn-ghost[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Interactive word magnifier inline */
+.wd {
+  display: inline-block;
+  will-change: transform;
+  transform-origin: center;
+}
+
+/* Blinking terminal caret */
+.terminal-caret {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: var(--vi);
+  vertical-align: -2px;
+  animation: blink-caret 1s steps(1) infinite;
+}
+
+@keyframes blink-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Print Friendly Styles */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  #scanner-canvas,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  .page-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+  .marker-highlight {
+    background-size: 100% 0.4em !important;
+  }
+}
