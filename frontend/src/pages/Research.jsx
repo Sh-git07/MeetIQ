@@ -7,6 +7,7 @@ import { ActivityLog } from '../components/research/ActivityLog';
 import { QueryPills } from '../components/research/QueryPills';
 import { Button } from '../components/ui/Button';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { getResearchStatus } from '../services/api';
 
 export function Research() {
   const { researchId } = useParams();
@@ -33,7 +34,21 @@ export function Research() {
     reconnect
   } = useResearchStream(researchId, meetingMeta);
 
-  const targetBriefingId = briefingId || 'brief_001';
+  const [resolvedBriefingId, setResolvedBriefingId] = React.useState(briefingId);
+
+  React.useEffect(() => {
+    if (briefingId) {
+      setResolvedBriefingId(briefingId);
+    } else if (stage === 'completed' && researchId) {
+      getResearchStatus(researchId)
+        .then((res) => {
+          if (res?.briefing_id) setResolvedBriefingId(res.briefing_id);
+        })
+        .catch(() => {});
+    }
+  }, [briefingId, stage, researchId]);
+
+  const targetBriefingId = resolvedBriefingId || briefingId;
 
   return (
     <div className="page-container relative min-h-screen flex flex-col justify-between !pt-14">
@@ -99,13 +114,23 @@ export function Research() {
           {/* Completed State Button */}
           {stage === 'completed' && (
             <div className="pt-2 animate-[reveal-up-anim_0.5s_cubic-bezier(0.2,0.8,0.2,1)]">
-              <Button
-                to={`/briefings/${targetBriefingId}`}
-                variant="primary"
-                className="py-3.5 px-7 text-[16px]"
-              >
-                Open the briefing →
-              </Button>
+              {targetBriefingId ? (
+                <Button
+                  to={`/briefings/${targetBriefingId}`}
+                  variant="primary"
+                  className="py-3.5 px-7 text-[16px]"
+                >
+                  Open the briefing →
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  disabled
+                  className="py-3.5 px-7 text-[16px] opacity-70 cursor-wait"
+                >
+                  Preparing briefing…
+                </Button>
+              )}
             </div>
           )}
         </div>

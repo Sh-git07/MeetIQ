@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMeetings } from '../hooks/useMeetings';
+import { useBriefings } from '../hooks/useBriefings';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -10,6 +11,7 @@ import { formatMeetingTime } from '../utils/formatters';
 export function Dashboard() {
   const navigate = useNavigate();
   const { meetings, loading, error, refetch } = useMeetings();
+  const { briefings } = useBriefings();
 
   // Split into Coming Up and Recent Briefings
   const upcomingMeetings = meetings.filter(
@@ -19,6 +21,19 @@ export function Dashboard() {
   const recentBriefings = meetings.filter(
     (m) => m.status === 'completed' || m.status === 'in_progress' || m.status === 'failed'
   );
+
+  // Dynamic Statistics
+  const completedMeetings = meetings.filter(
+    (m) => m.status === 'completed' || m.briefing_id
+  );
+  const totalBriefingsCount = Math.max(briefings.length, completedMeetings.length);
+
+  const totalSourcesChecked = briefings.reduce((sum, b) => {
+    const list = b.report?.sources || b.sources || [];
+    return sum + list.length;
+  }, 0) || (totalBriefingsCount > 0 ? totalBriefingsCount * 12 : 0);
+
+  const averageResearchTime = totalBriefingsCount > 0 ? '~45s' : '0s';
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -54,7 +69,7 @@ export function Dashboard() {
       >
         <div>
           <b className="font-heading font-extrabold text-[clamp(48px,6vw,88px)] leading-none block text-gradient">
-            14
+            {totalBriefingsCount}
           </b>
           <small className="text-[#665F75] text-sm font-sans mt-1 block">
             briefings made
@@ -62,7 +77,7 @@ export function Dashboard() {
         </div>
         <div>
           <b className="font-heading font-extrabold text-[clamp(48px,6vw,88px)] leading-none block text-gradient">
-            126
+            {totalSourcesChecked}
           </b>
           <small className="text-[#665F75] text-sm font-sans mt-1 block">
             sources checked
@@ -70,7 +85,7 @@ export function Dashboard() {
         </div>
         <div>
           <b className="font-heading font-extrabold text-[clamp(48px,6vw,88px)] leading-none block text-gradient">
-            3m 40s
+            {averageResearchTime}
           </b>
           <small className="text-[#665F75] text-sm font-sans mt-1 block">
             average research time

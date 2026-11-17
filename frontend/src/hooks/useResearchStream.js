@@ -31,10 +31,15 @@ export function useResearchStream(researchId, meetingMeta = {}) {
 
     if (event.stage === 'completed') {
       setStatus('completed');
-      if (event.data?.briefing_id) {
-        setBriefingId(event.data.briefing_id);
-      } else {
-        setBriefingId('brief_001');
+      const bId = event.data?.briefing_id || event.briefing_id;
+      if (bId) {
+        setBriefingId(bId);
+      } else if (researchId) {
+        getResearchStatus(researchId)
+          .then((res) => {
+            if (res?.briefing_id) setBriefingId(res.briefing_id);
+          })
+          .catch(() => {});
       }
     } else if (event.stage === 'failed') {
       setStatus('failed');
@@ -127,6 +132,9 @@ export function useResearchStream(researchId, meetingMeta = {}) {
           setProgress(100);
           setStatus('completed');
           setLatestMessage('Briefing ready');
+          if (currentStatus.briefing_id) {
+            setBriefingId(currentStatus.briefing_id);
+          }
         } else if (currentStatus.status === 'failed') {
           setStage('failed');
           setStatus('failed');
