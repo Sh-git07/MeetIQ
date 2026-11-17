@@ -99,6 +99,9 @@ class BriefingResponse(BaseModel):
     id: Optional[str] = None
     meeting_id: str
     research_id: Optional[str] = None
+    company: Optional[str] = None
+    meeting_type: Optional[str] = None
+    meeting_date: Optional[str] = None
     status: str = "completed"
     created_at: str
     report: BriefingReport

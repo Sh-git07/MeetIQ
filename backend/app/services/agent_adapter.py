@@ -264,13 +264,25 @@ async def execute_research_task(research_id: str, meeting_id: str) -> None:
 
         db.commit()
 
-        # Broadcast final completed event
+        # Broadcast final completed event with briefing_id and sources
+        final_sources = [
+            {
+                "id": s.get("source_id") or s.get("id"),
+                "title": s.get("title", "Untitled Source"),
+                "publisher": s.get("publisher") or "Web Source",
+                "url": s.get("url", ""),
+                "published_at": str(s.get("published_at")) if s.get("published_at") else None,
+                "category": s.get("category", "news")
+            }
+            for s in sources_list if isinstance(s, dict)
+        ]
         await stream_manager.broadcast_event(research_id, {
             "stage": "completed",
             "message": "Briefing ready",
             "progress": 100,
             "data": {
-                "briefing_id": briefing_id
+                "briefing_id": briefing_id,
+                "sources": final_sources
             }
         })
         logger.info(f"Research session {research_id} successfully completed. Briefing {briefing_id} generated.")

@@ -173,10 +173,9 @@ export function History() {
       {!loading && !error && filteredMeetings.length > 0 && (
         <div className="divide-y divide-[rgba(27,22,48,0.15)] reveal-up" style={{ '--stagger': 3 }}>
           {filteredMeetings.map((m) => {
-            const briefingId = m.briefing_id || 'brief_001';
             const targetUrl =
-              m.status === 'completed'
-                ? `/briefings/${briefingId}`
+              m.status === 'completed' && m.briefing_id
+                ? `/briefings/${m.briefing_id}`
                 : `/research/research_${m.meeting_id.replace('meet_', '')}`;
 
             return (

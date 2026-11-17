@@ -36,6 +36,7 @@ export function Research() {
 
   const [resolvedBriefingId, setResolvedBriefingId] = React.useState(briefingId);
   const [activeSources, setActiveSources] = React.useState(sources);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   React.useEffect(() => {
     if (sources && sources.length > 0) {
@@ -46,16 +47,52 @@ export function Research() {
   React.useEffect(() => {
     if (briefingId) {
       setResolvedBriefingId(briefingId);
-    } else if (stage === 'completed' && researchId) {
-      getResearchStatus(researchId)
-        .then((res) => {
-          if (res?.briefing_id) setResolvedBriefingId(res.briefing_id);
-        })
-        .catch(() => {});
+      return;
     }
-  }, [briefingId, stage, researchId]);
+
+    if (stage === 'completed' && researchId && !resolvedBriefingId) {
+      let isSubscribed = true;
+      const pollStatus = async () => {
+        try {
+          const res = await getResearchStatus(researchId);
+          if (isSubscribed && res?.briefing_id) {
+            setResolvedBriefingId(res.briefing_id);
+          }
+        } catch (e) {}
+      };
+
+      pollStatus();
+      const interval = setInterval(pollStatus, 1000);
+      return () => {
+        isSubscribed = false;
+        clearInterval(interval);
+      };
+    }
+  }, [briefingId, stage, researchId, resolvedBriefingId]);
 
   const targetBriefingId = resolvedBriefingId || briefingId;
+
+  const handleOpenBriefing = async () => {
+    if (targetBriefingId) {
+      navigate(`/briefings/${targetBriefingId}`);
+      return;
+    }
+    setIsNavigating(true);
+    try {
+      for (let i = 0; i < 6; i++) {
+        const res = await getResearchStatus(researchId);
+        if (res?.briefing_id) {
+          navigate(`/briefings/${res.briefing_id}`);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    } catch (err) {
+      console.error('Error resolving briefing:', err);
+    } finally {
+      setIsNavigating(false);
+    }
+  };
 
   React.useEffect(() => {
     if (stage === 'completed' && targetBriefingId && (!activeSources || activeSources.length === 0)) {
@@ -142,23 +179,18 @@ export function Research() {
           {/* Completed State Button */}
           {stage === 'completed' && (
             <div className="pt-2 animate-[reveal-up-anim_0.5s_cubic-bezier(0.2,0.8,0.2,1)]">
-              {targetBriefingId ? (
-                <Button
-                  to={`/briefings/${targetBriefingId}`}
-                  variant="primary"
-                  className="py-3.5 px-7 text-[16px]"
-                >
-                  Open the briefing →
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  disabled
-                  className="py-3.5 px-7 text-[16px] opacity-70 cursor-wait"
-                >
-                  Preparing briefing…
-                </Button>
-              )}
+              <Button
+                onClick={handleOpenBriefing}
+                variant="primary"
+                disabled={isNavigating}
+                className="py-3.5 px-7 text-[16px]"
+              >
+                {isNavigating
+                  ? 'Finalizing briefing…'
+                  : targetBriefingId
+                  ? 'Open the briefing →'
+                  : 'Preparing briefing…'}
+              </Button>
             </div>
           )}
         </div>

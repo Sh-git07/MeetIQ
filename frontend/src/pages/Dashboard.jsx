@@ -10,8 +10,18 @@ import { formatMeetingTime } from '../utils/formatters';
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { meetings, loading, error, refetch } = useMeetings();
-  const { briefings } = useBriefings();
+  const { meetings, loading, error, refetch: refetchMeetings } = useMeetings();
+  const { briefings, refetch: refetchBriefings } = useBriefings();
+
+  React.useEffect(() => {
+    refetchMeetings();
+    refetchBriefings();
+  }, [refetchMeetings, refetchBriefings]);
+
+  const handleRetry = () => {
+    refetchMeetings();
+    refetchBriefings();
+  };
 
   // Split into Coming Up and Recent Briefings
   const upcomingMeetings = meetings.filter(
@@ -97,7 +107,7 @@ export function Dashboard() {
       {error && (
         <div className="my-8 p-4 bg-[#C21A12]/10 border border-[#C21A12]/30 rounded-xl flex items-center justify-between">
           <p className="text-[#C21A12] text-sm font-medium">{error}</p>
-          <Button variant="ghost" onClick={refetch} className="text-xs py-1.5 px-3">
+          <Button variant="ghost" onClick={handleRetry} className="text-xs py-1.5 px-3">
             Retry
           </Button>
         </div>

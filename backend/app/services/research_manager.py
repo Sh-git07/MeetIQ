@@ -61,7 +61,8 @@ class ResearchStreamManager:
             self._history[research_id].append(event_data)
 
             stage = event_data.get("stage")
-            is_terminal = stage in ("completed", "failed")
+            has_briefing_id = bool(event_data.get("data", {}).get("briefing_id"))
+            is_terminal = (stage == "completed" and has_briefing_id) or stage == "failed"
             if is_terminal:
                 self._completed[research_id] = True
 

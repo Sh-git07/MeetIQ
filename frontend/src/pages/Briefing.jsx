@@ -13,7 +13,7 @@ import { Download, ArrowLeft } from 'lucide-react';
 
 export function Briefing() {
   const { briefingId } = useParams();
-  const { briefing, loading, error, downloadPdf, refetch } = useBriefing(briefingId || 'brief_001');
+  const { briefing, loading, error, downloadPdf, refetch } = useBriefing(briefingId);
   const { showToast } = useToast();
 
   const [activeSourceId, setActiveSourceId] = useState(null);
@@ -83,7 +83,7 @@ export function Briefing() {
             {company} · {meeting_type} · {formatMeetingTime(meeting_date)} · {status}
           </p>
           <h1 className="text-[clamp(36px,5vw,72px)] text-[#1B1630] font-heading font-extrabold tracking-tight leading-[0.98]">
-            {company} is opening its AI platform to partners.
+            {briefing.headline || (recent_developments && recent_developments[0]?.title) || `${company} Executive Briefing`}
           </h1>
         </div>
 
@@ -106,8 +106,14 @@ export function Briefing() {
             </h3>
             <p className="text-[#665F75] text-[15.5px] leading-relaxed m-0">
               {executive_summary}
-              <CitationMarker sourceId="1" activeSourceId={activeSourceId} onHover={setActiveSourceId} />
-              <CitationMarker sourceId="2" activeSourceId={activeSourceId} onHover={setActiveSourceId} />
+              {sources && sources.length > 0 && sources.slice(0, 2).map((s) => (
+                <CitationMarker
+                  key={s.id}
+                  sourceId={s.id}
+                  activeSourceId={activeSourceId}
+                  onHover={setActiveSourceId}
+                />
+              ))}
             </p>
           </section>
 

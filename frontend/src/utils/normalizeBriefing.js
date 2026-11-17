@@ -79,7 +79,7 @@ export function normalizeBriefing(raw) {
   // Normalize sources
   const sources = Array.isArray(report.sources)
     ? report.sources.map((s, idx) => ({
-        id: s.id !== undefined ? String(s.id) : String(idx + 1),
+        id: s.source_id ? String(s.source_id) : (s.id !== undefined ? String(s.id) : String(idx + 1)),
         title: s.title || s.name || 'Untitled Source',
         publisher: s.publisher || s.domain || s.source || 'Unknown Publisher',
         url: s.url || '#',
@@ -100,14 +100,18 @@ export function normalizeBriefing(raw) {
     financials: 50
   };
 
+  const company = report.company || raw.company || 'Unknown Company';
+  const headline = report.headline || (recentDevelopments[0]?.title ? recentDevelopments[0].title : `${company} Executive Briefing`);
+
   return {
     briefing_id: raw.briefing_id || raw.id || 'brief_unknown',
     meeting_id: raw.meeting_id || null,
     status: raw.status || 'completed',
     created_at: raw.created_at || new Date().toISOString(),
-    company: report.company || raw.company || 'Unknown Company',
-    meeting_type: raw.meeting_type || 'Partnership',
-    meeting_date: raw.meeting_date || null,
+    company,
+    headline,
+    meeting_type: raw.meeting_type || report.meeting_type || 'Partnership',
+    meeting_date: raw.meeting_date || report.meeting_date || null,
     executive_summary: report.executive_summary || report.summary || 'No summary available.',
     recent_developments: recentDevelopments,
     opportunities,

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createMockResearchStream } from '../mocks/mockStream';
 import { getResearchStatus } from '../services/api';
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS !== 'false';
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export function useResearchStream(researchId, meetingMeta = {}) {

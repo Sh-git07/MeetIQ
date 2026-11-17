@@ -14,15 +14,19 @@ router = APIRouter(prefix="/api/briefings", tags=["Briefings"])
 logger = logging.getLogger("meetiq.routes.briefings")
 
 
-def serialize_briefing(briefing: Briefing) -> BriefingResponse:
+def serialize_briefing(briefing: Briefing, meeting: Meeting = None) -> BriefingResponse:
     """Parse JSON report and serialize Briefing ORM to BriefingResponse schema."""
     try:
         report_dict = json.loads(briefing.report_json) if isinstance(briefing.report_json, str) else briefing.report_json
     except Exception:
         report_dict = {}
 
+    company = report_dict.get("company") or (meeting.company if meeting else "Company")
+    meeting_type = (meeting.meeting_type if meeting else None) or "Partnership"
+    meeting_date = format_iso(meeting.meeting_date) if meeting and meeting.meeting_date else None
+
     report = BriefingReport(
-        company=report_dict.get("company", "Company"),
+        company=company,
         executive_summary=report_dict.get("executive_summary", ""),
         recent_developments=report_dict.get("recent_developments", []),
         opportunities=report_dict.get("opportunities", []),
@@ -37,6 +41,9 @@ def serialize_briefing(briefing: Briefing) -> BriefingResponse:
         id=briefing.id,
         meeting_id=briefing.meeting_id,
         research_id=briefing.research_id,
+        company=company,
+        meeting_type=meeting_type,
+        meeting_date=meeting_date,
         status="completed",
         created_at=format_iso(briefing.created_at) or "",
         report=report
@@ -47,7 +54,11 @@ def serialize_briefing(briefing: Briefing) -> BriefingResponse:
 def list_briefings(db: Session = Depends(get_db)):
     """Retrieve all synthesized executive briefings."""
     briefings = db.query(Briefing).order_by(Briefing.created_at.desc()).all()
-    return [serialize_briefing(b) for b in briefings]
+    results = []
+    for b in briefings:
+        meeting = db.query(Meeting).filter(Meeting.id == b.meeting_id).first()
+        results.append(serialize_briefing(b, meeting))
+    return results
 
 
 @router.get("/{id}", response_model=BriefingResponse)
@@ -59,7 +70,8 @@ def get_briefing(id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Briefing {id} not found."
         )
-    return serialize_briefing(briefing)
+    meeting = db.query(Meeting).filter(Meeting.id == briefing.meeting_id).first()
+    return serialize_briefing(briefing, meeting)
 
 
 @router.get("/{id}/pdf")

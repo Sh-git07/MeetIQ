@@ -2,7 +2,7 @@ import axios from 'axios';
 import { mockMeetings, mockBriefings } from '../mocks/mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS !== 'false';
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 
 // Central Axios instance
 export const apiClient = axios.create({
