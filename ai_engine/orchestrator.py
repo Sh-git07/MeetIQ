@@ -29,15 +29,24 @@ from ai_engine.writer import BriefingWriter
 logger = logging.getLogger("ai_engine.orchestrator")
 
 
-def _safe_progress(callback: Optional[Callable[[Dict[str, Any]], None]], stage: str, message: str, progress: int):
+def _safe_progress(
+    callback: Optional[Callable[[Dict[str, Any]], None]],
+    stage: str,
+    message: str,
+    progress: int,
+    data: Optional[Dict[str, Any]] = None,
+):
     """Safely invokes the progress callback without ever crashing the engine."""
     if callback and callable(callback):
         try:
-            callback({
+            event = {
                 "stage": stage,
                 "message": message,
                 "progress": progress,
-            })
+            }
+            if data:
+                event["data"] = data
+            callback(event)
         except Exception as e:
             logger.warning(f"Ignored error in user progress callback: {e}")
 
@@ -82,21 +91,53 @@ def run_research(request: dict, progress_callback: Optional[Callable[[Dict[str, 
         # ---------------------------------------------------------
         _safe_progress(progress_callback, "planning", "Formulating objective-tailored research queries", 20)
         plan = planner.plan_research(meeting_req)
+        query_strings = [q.query for q in plan.queries]
+        _safe_progress(
+            progress_callback,
+            "planning",
+            f"Formulated {len(query_strings)} research queries",
+            25,
+            data={"queries": query_strings},
+        )
 
         # ---------------------------------------------------------
         # Stage 3 & 4 – Tavily research & Freshness filtering
         # ---------------------------------------------------------
-        _safe_progress(progress_callback, "searching", f"Searching public sources across {len(plan.queries)} categories", 35)
+        _safe_progress(
+            progress_callback,
+            "searching",
+            f"Searching public sources across {len(plan.queries)} categories",
+            35,
+            data={"queries": query_strings},
+        )
         sources: List[NormalizedSource] = researcher.execute_search_plan(
             plan=plan,
             window_start=window_start,
             cutoff_date=cutoff_date,
         )
 
+        source_payloads = [
+            {
+                "id": s.source_id,
+                "title": s.title,
+                "publisher": s.publisher or "Web Source",
+                "url": s.url,
+                "published_at": s.published_at,
+                "category": getattr(s, "category", "news"),
+            }
+            for s in sources
+        ]
+
         # ---------------------------------------------------------
         # Stage 5 – Claim extraction
         # ---------------------------------------------------------
-        _safe_progress(progress_callback, "searching", "Extracting factual claims from retrieved sources", 50)
+        _safe_progress(
+            progress_callback,
+            "searching",
+            f"Extracted {len(sources)} sources; parsing claims",
+            50,
+            data={"sources": source_payloads, "queries": query_strings},
+        )
         claims: List[ExtractedClaim] = researcher.extract_claims(
             request=meeting_req,
             sources=sources,
@@ -107,7 +148,13 @@ def run_research(request: dict, progress_callback: Optional[Callable[[Dict[str, 
         # ---------------------------------------------------------
         # Stage 6 – Evidence verification
         # ---------------------------------------------------------
-        _safe_progress(progress_callback, "verifying", "Cross-checking claims and temporal boundaries", 65)
+        _safe_progress(
+            progress_callback,
+            "verifying",
+            "Cross-checking claims and temporal boundaries",
+            65,
+            data={"sources": source_payloads},
+        )
         verified_devs, insufficient_categories, limitations = verifier.verify_developments(
             company=meeting_req.company,
             objective=meeting_req.objective,
@@ -115,6 +162,18 @@ def run_research(request: dict, progress_callback: Optional[Callable[[Dict[str, 
             sources=sources,
             window_start=window_start,
             cutoff_date=cutoff_date,
+        )
+
+        verified_ids = list({sid for d in verified_devs for sid in d.source_ids})
+        _safe_progress(
+            progress_callback,
+            "verifying",
+            f"Verified {len(verified_devs)} developments across sources",
+            68,
+            data={
+                "sources": source_payloads,
+                "verification": {"verified_ids": verified_ids},
+            },
         )
 
         # ---------------------------------------------------------
@@ -176,7 +235,24 @@ def run_research(request: dict, progress_callback: Optional[Callable[[Dict[str, 
         # ---------------------------------------------------------
         # Stage 8 – Briefing generation
         # ---------------------------------------------------------
-        _safe_progress(progress_callback, "generating", "Synthesizing executive briefing document", 90)
+        final_source_payloads = [
+            {
+                "id": s.source_id,
+                "title": s.title,
+                "publisher": s.publisher or "Web Source",
+                "url": s.url,
+                "published_at": s.published_at,
+                "category": getattr(s, "category", "news"),
+            }
+            for s in sources
+        ]
+        _safe_progress(
+            progress_callback,
+            "generating",
+            "Synthesizing executive briefing document",
+            90,
+            data={"sources": final_source_payloads},
+        )
         briefing: ExecutiveBriefing = writer.write_briefing(
             request=meeting_req,
             verified_developments=verified_devs,
@@ -186,7 +262,13 @@ def run_research(request: dict, progress_callback: Optional[Callable[[Dict[str, 
             limitations=limitations,
         )
 
-        _safe_progress(progress_callback, "completed", "Executive briefing generation complete", 100)
+        _safe_progress(
+            progress_callback,
+            "completed",
+            "Executive briefing generation complete",
+            100,
+            data={"sources": final_source_payloads},
+        )
         return briefing.model_dump()
 
     except Exception as e:

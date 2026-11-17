@@ -7,7 +7,7 @@ import { ActivityLog } from '../components/research/ActivityLog';
 import { QueryPills } from '../components/research/QueryPills';
 import { Button } from '../components/ui/Button';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
-import { getResearchStatus } from '../services/api';
+import { getResearchStatus, getBriefing } from '../services/api';
 
 export function Research() {
   const { researchId } = useParams();
@@ -35,6 +35,13 @@ export function Research() {
   } = useResearchStream(researchId, meetingMeta);
 
   const [resolvedBriefingId, setResolvedBriefingId] = React.useState(briefingId);
+  const [activeSources, setActiveSources] = React.useState(sources);
+
+  React.useEffect(() => {
+    if (sources && sources.length > 0) {
+      setActiveSources(sources);
+    }
+  }, [sources]);
 
   React.useEffect(() => {
     if (briefingId) {
@@ -49,6 +56,27 @@ export function Research() {
   }, [briefingId, stage, researchId]);
 
   const targetBriefingId = resolvedBriefingId || briefingId;
+
+  React.useEffect(() => {
+    if (stage === 'completed' && targetBriefingId && (!activeSources || activeSources.length === 0)) {
+      getBriefing(targetBriefingId)
+        .then((b) => {
+          const reportSources = b?.report?.sources || b?.sources || [];
+          if (reportSources.length > 0) {
+            setActiveSources(
+              reportSources.map((s) => ({
+                id: s.source_id || s.id,
+                title: s.title,
+                publisher: s.publisher,
+                url: s.url,
+                published_at: s.published_at,
+              }))
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  }, [stage, targetBriefingId, activeSources]);
 
   return (
     <div className="page-container relative min-h-screen flex flex-col justify-between !pt-14">
@@ -142,7 +170,7 @@ export function Research() {
             company={meetingMeta.company}
             meetingType={meetingMeta.meeting_type}
             meetingDate={meetingMeta.meeting_date || 'briefing in progress'}
-            sources={sources}
+            sources={activeSources}
             verifiedIds={verifiedIds}
             stage={stage}
             status={status}
