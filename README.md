@@ -2,6 +2,8 @@
 
 > AI-powered pre-meeting briefing agent (Global AI Hackathon 2026, Problem 05).
 
+🌐 **Live Demo / Deployed App:** [https://meet-iq-lemon.vercel.app/](https://meet-iq-lemon.vercel.app/)
+
 MeetIQ researches public signals from the past 30 days around a company or executive to synthesize a concise, source-backed executive briefing before your meeting.
 
 ---
